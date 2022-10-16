@@ -1,0 +1,56 @@
+version: "3.8"
+
+######################################### Global Environment Variables
+x-global-variables: &global-variables
+  {
+    MYSQL_HOST, MYSQL_DATABASE, MYSQL_USER, MYSQL_PASSWORD, MYSQL_ROOT_PASSWORD,
+  }
+
+######################################### Networks and global extensions
+x-base-env: &base-env
+  env_file:
+    - ../.env
+
+x-base: &base-service
+  <<: *base-env
+  deploy:
+    mode: global
+    restart_policy:
+      condition: on-failure
+      delay: 5s
+      max_attempts: 3
+      window: 120s
+
+networks:
+  default:
+    external:
+      name: ${NETWORK_NAME}
+
+##############################################################################
+#                           SERVICES                                         #
+##############################################################################
+
+services:
+######################################### Helpers Services
+
+  db:
+    <<: *base-service
+    image: mysql:8.0
+    networks:
+      default: { aliases: [ "${COMPOSE_PROJECT_NAME}.db" ] }
+    environment: *global-variables
+    volumes:
+      - /data/fileserver/${PROJECT_NAME_PREFIX}/db-storage:/var/lib/mysql
+
+  myadmin:
+    <<: *base-service
+    image: phpmyadmin/phpmyadmin
+    environment:
+      - VIRTUAL_HOST=${PHP_DB_GUI_HOST}
+      - LETSENCRYPT_HOST=${PHP_DB_GUI_HOST}
+      - LETSENCRYPT_EMAIL=shtalinberg@attractgroup.com
+      - PMA_HOST=${COMPOSE_PROJECT_NAME}.db
+      - MAX_EXECUTION_TIME=1000
+      - MEMOTY_LIMIT=700M
+      - UPLOAD_LIMIT=200M
+

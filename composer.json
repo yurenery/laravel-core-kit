@@ -1,0 +1,47 @@
+{
+    "name": "yurenery/laravel-core-kit",
+    "description": "Main Core Code for starter project modules and extensions",
+    "type": "library",
+    "version": "2.4.1",
+    "authors": [
+        {
+            "name": "Yure Nery",
+            "email": "yurenery@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^7.4",
+        "laravel/framework": "^8.0",
+        "yurenery/laravel-core-auth": "^2.0",
+        "yurenery/postman-documentation": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "AttractCores\\LaravelCoreKit\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^8.5",
+        "orchestra/testbench": "^6.0",
+        "yurenery/laravel-core-test-bench": "^1.0.1"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Amondar\\Sextant\\SextantServiceProvider",
+                "AttractCores\\PostmanDocumentation\\PostmanServiceProvider",
+                "AttractCores\\LaravelCoreClasses\\CoreControllerServiceProvider",
+                "AttractCores\\LaravelCoreVerificationBroker\\VerificationBrokerServiceProvider",
+                "AttractCores\\LaravelCoreAuth\\CoreAuthServiceProvider",
+                "AttractCores\\LaravelCoreAuth\\InitializeCoreRightsServiceProvider",
+                "AttractCores\\LaravelCoreAuth\\CustomPassportServiceProvider",
+                "AttractCores\\LaravelCoreKit\\KitServiceProvider"
+            ]
+        }
+    }
+}

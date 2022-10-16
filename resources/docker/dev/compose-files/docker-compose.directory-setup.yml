@@ -1,0 +1,12 @@
+version: "2.0"
+
+services:
+  directory-setup:
+    image: nginx
+    command: chmod -R 777 /data && bash -c 'echo DONE'
+    volumes:
+      - /data/fileserver/${PROJECT_NAME_PREFIX}/resources:/data/resources
+      - /data/fileserver/${PROJECT_NAME_PREFIX}/oauth-keys:/data/oauth-keys
+      - /data/fileserver/${PROJECT_NAME_PREFIX}/db-storage:/data/db-storage
+      - /data/fileserver/${PROJECT_NAME_PREFIX}/redis-storage:/data/redis-storage
+      - /data/fileserver/${PROJECT_NAME_PREFIX}/phpmyadmin:/data/phpmyadmin

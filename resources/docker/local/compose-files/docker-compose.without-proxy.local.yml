@@ -1,0 +1,117 @@
+version: "3.7"
+
+x-build-args: &build-arguments
+  ENVIRONMENT: ${ENVIRONMENT}
+  DOCKER_ENV_TYPE: $DOCKER_ENV_TYPE
+  PHP_DATE_TIMEZONE: $PHP_DATE_TIMEZONE
+  PHP_MEMORY_LIMIT: $PHP_MEMORY_LIMIT
+  PHP_POST_MAX_SIZE: $PHP_POST_MAX_SIZE
+  PHP_UPLOAD_MAX_SIZE: $PHP_UPLOAD_MAX_SIZE
+  PHP_SMTP: $PHP_SMTP
+  PHP_SMTP_PORT: $PHP_SMTP_PORT
+
+x-dynamic-env: &dynamic-env
+  ENVIRONMENT: ${ENVIRONMENT}
+
+x-base: &base
+  environment: *dynamic-env
+  env_file:
+    - ../.env
+    - ../envs/.env.${ENVIRONMENT}
+  network_mode: "bridge"
+  
+x-db: &db
+  environment: *base
+  network_mode: "bridge"
+
+x-db-volumes: &db-volumes
+  - ../../../storages/mysql:/var/lib/mysql
+
+services:
+  ######################################### Required Services
+
+  web:
+    <<: *base
+    container_name: ${COMPOSE_PROJECT_NAME}_web
+    build:
+      context: ../../..
+      dockerfile: ../../${DOCKER_ENV_TYPE}/nginx/Dockerfile
+      args: *build-arguments
+    volumes:
+      - ../../../project-files:/var/www/project${CACHED}
+      - ../nginx:/var/www/docker${CACHED}
+    links:
+      - php:php
+    depends_on:
+      - php
+    ports:
+      - 7777:80
+
+  php:
+    <<: *base
+    container_name: ${COMPOSE_PROJECT_NAME}_php
+    build:
+      context: ../../..
+      dockerfile: ../../${DOCKER_ENV_TYPE}/php/Dockerfile
+      args: *build-arguments
+    volumes:
+      - ../../../project-files:/var/www/project${CACHED}
+      - ../php:/var/www/docker${CACHED}
+    links:
+      - db:db
+      - redis:redis
+
+  ######################################### Helpers Services
+
+  db:
+    <<: *db
+    container_name: ${COMPOSE_PROJECT_NAME}_db
+    image: mysql:5.7.23
+    command: "mysqld --sql_mode=''"
+    volumes: *db-volumes
+    ports:
+      - 7778:3306
+
+  myadmin:
+    <<: *base
+    image: phpmyadmin/phpmyadmin
+    container_name: ${COMPOSE_PROJECT_NAME}_myadmin
+    links:
+      - db:db
+    environment:
+      - VIRTUAL_HOST=starter-kit.phpmyadmin
+    ports:
+      - 7779:80
+
+  redis:
+    container_name: ${COMPOSE_PROJECT_NAME}_redis
+    image: redis
+    network_mode: "bridge"
+
+  cron:
+    <<: *base
+    container_name: ${COMPOSE_PROJECT_NAME}_cron
+    build:
+      context: ../../..
+      dockerfile: ../../${DOCKER_ENV_TYPE}/cron/Dockerfile
+      args: *build-arguments
+    volumes:
+      - ../../../project-files:/var/www/project${CACHED}
+      - ../cron:/var/www/docker${CACHED}
+    links:
+      - db:db
+      - redis:redis
+
+  queue:
+    <<: *base
+    container_name: ${COMPOSE_PROJECT_NAME}_queue
+    build:
+      context: ../../..
+      dockerfile: ../../${DOCKER_ENV_TYPE}/queue/Dockerfile
+      args: *build-arguments
+    volumes:
+      - ../../../project-files:/var/www/project${CACHED}
+      - ../queue:/var/www/docker${CACHED}
+    links:
+      - db:db
+      - redis:redis

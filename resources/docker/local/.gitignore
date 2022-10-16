@@ -1,0 +1,14 @@
+!/compose-files/docker-compose.proxy.local.yml
+!/compose-files/docker-compose.without-proxy.local.yml
+!cron/*
+!php/*
+!nginx/*
+!queue/*
+!.env
+!/envs/.env.example
+!/envs/.env.db
+!docker.sh
+!dockerProxy.sh
+!readme.md
+!.gitignore
+

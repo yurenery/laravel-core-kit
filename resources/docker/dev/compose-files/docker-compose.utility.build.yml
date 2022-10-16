@@ -1,0 +1,37 @@
+version: "3.4"
+
+######################################### Global Environment Variables
+
+x-build: &build-variables
+  ENVIRONMENT: ${ENVIRONMENT}
+  PACKAGIST_TOKEN: ${PACKAGIST_TOKEN}
+  DOCKER_ENV_TYPE: ${DOCKER_ENV_TYPE}
+  PHP_MEMORY_LIMIT: ${PHP_MEMORY_LIMIT}
+  PHP_POST_MAX_SIZE: ${PHP_POST_MAX_SIZE}
+  PHP_UPLOAD_MAX_SIZE: ${PHP_UPLOAD_MAX_SIZE}
+  PHP_DATE_TIMEZONE: $PHP_DATE_TIMEZONE
+  PHP_SMTP: $PHP_SMTP
+  PHP_SMTP_PORT: $PHP_SMTP_PORT
+
+##############################################################################
+#                           SERVICES                                         #
+##############################################################################
+
+services:
+
+######################################### Helpers Services
+
+  cron:
+    build:
+      context: ../../..
+      dockerfile: ./docker/${DOCKER_ENV_TYPE}/cron/Dockerfile
+      args: *build-variables
+    image: ${HUB_REPOSITORY_DOMAIN}${COMPOSE_PROJECT_NAME}-cron:${BUILD_NUMBER:-latest}
+
+  queue:
+    build:
+      context: ../../..
+      dockerfile: ./docker/${DOCKER_ENV_TYPE}/queue/Dockerfile
+      args: *build-variables
+    image: ${HUB_REPOSITORY_DOMAIN}${COMPOSE_PROJECT_NAME}-queue:${BUILD_NUMBER:-latest}
+

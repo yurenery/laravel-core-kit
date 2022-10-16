@@ -1,0 +1,53 @@
+version: "3.8"
+
+######################################### Global Environment Variables
+x-global-variables: &global-variables
+  {
+    LARAVEL_ECHO_SERVER_AUTH_HOST, LARAVEL_ECHO_SERVER_DEBUG, LARAVEL_ECHO_SERVER_DB,
+    REDIS_HOST, REDIS_PORT, REDIS_PREFIX, REDIS_PASSWORD, REDIS_DB
+  }
+
+######################################### Networks and global extensions
+x-base-env: &base-env
+  env_file:
+    - ../.env
+
+x-base: &base-service
+  <<: *base-env
+  logging:
+    driver: json-file
+    options:
+      max-size: "20m"
+      max-file: "4"
+  deploy:
+    mode: global
+    restart_policy:
+      condition: on-failure
+      delay: 5s
+      max_attempts: 3
+      window: 120s
+
+networks:
+  default:
+    external:
+      name: ${NETWORK_NAME}
+
+##############################################################################
+#                           SERVICES                                         #
+##############################################################################
+
+services:
+  ######################################### Helpers Services
+  
+  laravel-echo-server:
+    <<: *base-service
+    image: attractgrouphub/laravel-echo-server:1.0.0
+    environment:
+      <<: *global-variables
+      VIRTUAL_PORT: ${VIRTUAL_PORT}
+      VIRTUAL_HOST: ${VIRTUAL_HOST}
+      LETSENCRYPT_HOST: ${VIRTUAL_HOST}
+      LETSENCRYPT_EMAIL: shtalinberg@attractgroup.com
+    networks:
+      default: {aliases: ["${COMPOSE_PROJECT_NAME}.echo"]}
+

@@ -1,0 +1,78 @@
+version: "3.8"
+
+######################################### Global Environment Variables
+x-global-variables: &global-variables
+  {
+    ENVIRONMENT, APP_NAME, APP_URL, SPA_BACKEND_URL, SPA_FRONTEND_URL, APP_DEBUG,
+    START_USER_EMAIL, START_USER_PASSWORD, KIT_AUTH_PASSWORD_GRANT_CLIENT_ID, KIT_AUTH_PASSWORD_GRANT_CLIENT_SECRET,
+    CACHE_DRIVER, QUEUE_DRIVER, SESSION_DRIVER, SESSION_LIFE_TIME,
+    MYSQL_HOST, MYSQL_DATABASE, MYSQL_USER, MYSQL_PASSWORD,
+    REDIS_HOST, REDIS_PORT, REDIS_PASSWORD,
+    SMTP_USER_NAME, SMTP_USER_PASSWORD, SMTP_EMAIL_FROM,
+    PHP_MEMORY_LIMIT, PHP_POST_MAX_SIZE, PHP_UPLOAD_MAX_SIZE, FPM_HOST,
+    TRUSTED_PROXY_IP, FCM_SERVER_KEY,
+    NGINX_IMAGE_INTERACTS_S3_PROXY_PASS,
+    FILESYSTEM_DRIVER, AWS_DEFAULT_REGION, AWS_BUCKET,
+    AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
+    GOOGLE_SERVICES_KEY
+  }
+
+######################################### Networks and global extensions
+x-project-volumes: &project-volumes
+    - /data/fileserver/${PROJECT_NAME_PREFIX}/resources:/var/www/project/storage/app/public
+    - /data/fileserver/${PROJECT_NAME_PREFIX}/oauth-keys:/var/www/project/storage/oauth-keys
+
+x-base-env: &base-env
+  env_file:
+    - ../.env
+
+x-base: &base-service
+  <<: *base-env
+  logging:
+    driver: json-file
+    options:
+      max-size: "20m"
+      max-file: "4"
+  deploy:
+    mode: global
+    restart_policy:
+      condition: on-failure
+      delay: 5s
+      max_attempts: 3
+      window: 120s
+
+networks:
+  default:
+    external:
+      name: ${NETWORK_NAME}
+
+##############################################################################
+#                           SERVICES                                         #
+##############################################################################
+
+services:
+
+######################################### Helpers Services
+
+  cron:
+    <<: *base-service
+    image: ${HUB_REPOSITORY_DOMAIN}${COMPOSE_PROJECT_NAME}-cron:${BUILD_NUMBER:-latest}
+    environment: *global-variables
+
+  queue:
+    <<: *base-service
+    image: ${HUB_REPOSITORY_DOMAIN}${COMPOSE_PROJECT_NAME}-queue:${BUILD_NUMBER:-latest}
+    environment: *global-variables
+    volumes: *project-volumes
+    deploy:
+      replicas: ${REPLICAS_COUNT}
+      mode: replicated
+      update_config:
+        parallelism: 2
+        delay: 7s
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+

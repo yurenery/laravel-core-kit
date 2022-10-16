@@ -1,0 +1,59 @@
+version: "3.8"
+
+######################################### Global Environment Variables
+x-global-variables: &global-variables
+  {
+    REDIS_PASSWORD
+  }
+
+x-redis-volumes: &redis-volumes
+  - /data/fileserver/${PROJECT_NAME_PREFIX}/redis-storage:/data
+
+######################################### Networks and global extensions
+x-base-env: &base-env
+  env_file:
+    - ../.env
+
+x-base: &base-service
+  <<: *base-env
+  logging:
+    driver: json-file
+    options:
+      max-size: "20m"
+      max-file: "4"
+  deploy:
+    mode: global
+    resources:
+      limits:
+        cpus: '0.01'
+        memory: ${MEMORY_LIMIT}
+      reservations:
+        cpus: '0.001'
+        memory: ${MEMORY_RESERVED}
+    restart_policy:
+      condition: on-failure
+      delay: 5s
+      max_attempts: 3
+      window: 120s
+
+networks:
+  default:
+    external:
+      name: ${NETWORK_NAME}
+
+##############################################################################
+#                           SERVICES                                         #
+##############################################################################
+
+services:
+  ######################################### Helpers Services
+
+  redis:
+    <<: *base-service
+    image: redis
+    command: redis-server --bind 0.0.0.0 --requirepass ${REDIS_PASSWORD}
+    volumes: *redis-volumes
+    environment: *global-variables
+    networks:
+      default: {aliases: ["${COMPOSE_PROJECT_NAME}.redis"]}
+

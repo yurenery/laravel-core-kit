@@ -1,0 +1,9 @@
+SHELL=/bin/bash
+PHP_DATE_TIMEZONE=Europe/Moscow
+PHP_MEMORY_LIMIT=1024M
+PHP_POST_MAX_SIZE=20M
+PHP_UPLOAD_MAX_SIZE=20M
+PHP_SMTP=localhost
+PHP_SMTP_PORT=25
+
+*/5 * * * * /usr/local/bin/php /var/www/project/artisan cron:test > /var/www/project/test_cron.log 2>&1
